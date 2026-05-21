@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { colordx, nearest, random, Colordx, getFormat, extend } from "../src/index.js";
+import { colordx, oklabDeltaE, nearest, random, Colordx, getFormat, extend } from "../src/index.js";
 import a11y from "../src/plugins/a11y.js";
 import hsv from "../src/plugins/hsv.js";
 import hwb from "../src/plugins/hwb.js";
@@ -1047,6 +1047,32 @@ describe("string output: round-trips", () => {
     const { h } = colordx("#ff0055").toHsl();
     expect(h).toBeGreaterThanOrEqual(0);
     expect(h).toBeLessThan(360);
+  });
+});
+
+describe("oklabDeltaE", () => {
+  it("same color returns 0", () => {
+    expect(oklabDeltaE("#ff0000", "#ff0000")).toBe(0);
+  });
+
+  it("is symmetric", () => {
+    const ab = oklabDeltaE("#ff0000", "#0000ff");
+    const ba = oklabDeltaE("#0000ff", "#ff0000");
+    expect(Math.abs(ab - ba)).toBeLessThan(0.00001);
+  });
+
+  it("is non-negative", () => {
+    for (const [a, b] of [["#ff0000", "#0000ff"], ["#ffffff", "#000000"], ["#808080", "#ff8800"]] as const) {
+      expect(oklabDeltaE(a, b)).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it("black vs white is approximately 1 in OKLab", () => {
+    expect(oklabDeltaE("#000000", "#ffffff")).toBeCloseTo(1, 1);
+  });
+
+  it("barely-different colors produce a small value", () => {
+    expect(oklabDeltaE("#ff0000", "#fe0000")).toBeLessThan(0.05);
   });
 });
 

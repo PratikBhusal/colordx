@@ -260,6 +260,17 @@ export class Colordx {
     return this.hue(this.hue() + amount);
   }
 
+  /** Returns the Euclidean distance in OKLab between this color and `color`. 0 = identical. */
+  oklabDeltaE(color: AnyColor | Colordx): number {
+    return Math.sqrt(this._oklabDeltaESquared(color));
+  }
+
+  _oklabDeltaESquared(color: AnyColor | Colordx): number {
+    const { l: l1, a: a1, b: b1 } = rgbToOklab(this._rawRgb());
+    const { l: l2, a: a2, b: b2 } = rgbToOklab(new Colordx(color)._rawRgb());
+    return (l2 - l1) ** 2 + (a2 - a1) ** 2 + (b2 - b1) ** 2;
+  }
+
   /** True when both colors round to the same RGBA tuple. */
   isEqual(color: AnyColor): boolean {
     const other = new Colordx(color).toRgb();
@@ -331,6 +342,14 @@ export const colordx = (input: AnyColor | Colordx): Colordx => new Colordx(input
 /** Emits an 8-digit `#rrggbbaa` hex for any color input. Shortcut for `colordx(c).toHex8()`. */
 export const toHex8 = (input: AnyColor | Colordx): string => new Colordx(input).toHex8();
 
+/** Returns the Euclidean distance in OKLab between two colors. 0 = identical. */
+export const oklabDeltaE = (color1: AnyColor | Colordx, color2: AnyColor | Colordx): number =>
+  new Colordx(color1).oklabDeltaE(color2);
+
+/** Squared Euclidean distance in OKLab. Cheaper than `oklabDeltaE` when only relative ordering matters. */
+export const oklabDeltaESquared = (color1: AnyColor | Colordx, color2: AnyColor | Colordx): number =>
+  new Colordx(color1)._oklabDeltaESquared(color2);
+
 /** Registers plugins. Each plugin is called once with the `Colordx` class and parser arrays. */
 export const extend = (plugins: Plugin[]): void => {
   plugins.forEach((plugin) => plugin(Colordx, parsers, pluginFormatParsers));
@@ -342,12 +361,11 @@ export const extend = (plugins: Plugin[]): void => {
  */
 export const nearest = <T extends AnyColor>(color: AnyColor, candidates: T[]): T => {
   if (candidates.length === 0) throw new Error('nearest: candidates array must not be empty');
-  const { l: l1, a: a1, b: b1 } = new Colordx(color).toOklab();
+  const base = new Colordx(color);
   let minDist = Infinity;
   let result = candidates[0] as T;
   for (const candidate of candidates) {
-    const { l: l2, a: a2, b: b2 } = new Colordx(candidate).toOklab();
-    const dist = (l2 - l1) ** 2 + (a2 - a1) ** 2 + (b2 - b1) ** 2;
+    const dist = base._oklabDeltaESquared(candidate);
     if (dist < minDist) {
       minDist = dist;
       result = candidate;

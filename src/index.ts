@@ -1,4 +1,4 @@
-export { Colordx, colordx, extend, nearest, random, toHex8 } from './colordx.js';
+export { Colordx, colordx, oklabDeltaE, extend, nearest, random, toHex8 } from './colordx.js';
 export { toHexByte } from './colorModels/hex.js';
 export type { Plugin } from './colordx.js';
 export { getFormat } from './parse.js';
