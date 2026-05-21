@@ -125,3 +125,21 @@ export const parseHslString = (input: unknown): RgbColor | null => {
   const alpha = rawA === undefined ? 1 : parseNum(rawA) / (isPercent ? 100 : 1);
   return hslToRgb(clampHsl({ h, s, l, alpha }));
 };
+
+
+export const parseHslStringUnclamped = (input: unknown): RgbColor | null => {
+  if (typeof input !== 'string') return null;
+  const g = HSL_RE.exec(input.trim())?.groups;
+  if (!g) return null;
+  const isComma = g.s_c !== undefined;
+  if (isComma && /^none$/i.test(g.h!)) return null; // legacy syntax has no `none`
+  const unit = g.hu?.toLowerCase() ?? 'deg';
+  const h = parseNum(g.h!) * (ANGLE_UNITS[unit] ?? 1);
+  const s = parseNum((g.s_c ?? g.s_s)!);
+  const l = parseNum((g.l_c ?? g.l_s)!);
+  const rawA = g.al_c ?? g.al_s;
+  const isPercent = !!(g.alp_c ?? g.alp_s);
+  if (isComma && rawA !== undefined && /^none$/i.test(rawA)) return null;
+  const alpha = rawA === undefined ? 1 : parseNum(rawA) / (isPercent ? 100 : 1);
+  return hslToRgb({ h, s, l, alpha });
+};

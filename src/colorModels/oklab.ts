@@ -159,6 +159,7 @@ export const parseOklabObject = (input: unknown): RgbColor | null => {
   const { l, a, b, alpha = 1 } = input as { l: unknown; a: unknown; b: unknown; alpha?: unknown };
   if (!isAnyNumber(l) || !isAnyNumber(a) || !isAnyNumber(b) || !isAnyNumber(alpha)) return null;
   if (sanitize(l) > 1) return null; // OKLab L is always [0, 1]; reject CIE Lab values passed without colorSpace branding
+  // TODO: Add console.log to check what this value is
   return oklabToRgbUnclamped({
     l: sanitize(l),
     a: sanitize(a),
@@ -181,5 +182,6 @@ export const parseOklabString = (input: unknown): RgbColor | null => {
   const a = g.ap ? parseNum(g.a!) * 0.004 : parseNum(g.a!); // 100% = 0.4
   const b = g.bp ? parseNum(g.b!) * 0.004 : parseNum(g.b!);
   const alpha = g.al === undefined ? 1 : parseNum(g.al) / (g.alp ? 100 : 1);
+  // TODO: Add console.log to check what this value is
   return oklabToRgbUnclamped({ l: L, a, b, alpha: clamp(alpha, 0, 1) });
 };
